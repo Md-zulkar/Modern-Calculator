@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBin - AI-Powered Smart Waste Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --secondary: #81c784;
+            --organic: #8BC34A;
+            --plastic: #FF5722;
+            --glass: #2196F3;
+            --metal: #607D8B;
+            --paper: #FFC107;
+            --danger: #f44336;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .navbar {
+            background-color: var(--primary);
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 0;
+        }
+        
+        .smart-bin-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .smart-bin {
+            width: 100%;
+            height: 300px;
+            background: url('https://i.imgur.com/JQvJX3A.png') no-repeat center center;
+            background-size: contain;
+            position: relative;
+        }
+        
+        .waste-input {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background-color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .compartment {
+            position: absolute;
+            bottom: 0;
+            width: 25%;
+            height: 40%;
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        .compartment-organic {
+            left: 0;
+            background-color: var(--organic);
+        }
+        
+        .compartment-plastic {
+            left: 25%;
+            background-color: var(--plastic);
+        }
+        
+        .compartment-glass {
+            left: 50%;
+            background-color: var(--glass);
+        }
+        
+        .compartment-metal {
+            left: 75%;
+            background-color: var(--metal);
+        }
+        
+        .waste-level {
+            width: 100%;
+            background-color: rgba(0,0,0,0.3);
+            transition: height 0.5s;
+        }
+       
+        .service-card {
+            width: 300px;
+            padding: 20px;
+            margin: 15px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        /* इमेज स्टाइलिंग */
+        .clean-bg {
+            width: 200px;  /* साइज़ कम किया */
+            height: auto;
+            display: block;
+            margin: 0 auto 15px;
+            background: transparent !important; /* ब्लैक बैकग्राउंड रिमूव */
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    
+        
+        .scanner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #qr-video {
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        
+        .municipal-dashboard {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .coupon-card {
+            border-left: 4px solid var(--primary);
+        }
+        
+        @keyframes wasteDrop {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            100% { transform: translateY(0) rotate(360deg); opacity: 1; }
+        }
+        
+        .waste-animation {
+            position: absolute;
+            animation: wasteDrop 1s forwards;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-recycle me-2"></i>EcoBin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#smart-bin">Smart Bin</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#rewards">Rewards</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#municipalModal">
+                            <i class="fas fa-truck me-1"></i>Municipal Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-4">AI-Powered Smart Waste Management</h1>
+            <p class="lead mb-5">Let our smart bins sort your waste automatically and earn rewards for every disposal</p>
+            <button class="btn btn-success btn-lg me-2" id="startScanBtn">
+                <i class="fas fa-qrcode me-2"></i>Scan Bin QR Code
+            </button>
+            <button class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#disposeModal">
+                <i class="fas fa-trash-alt me-2"></i>Simulate Disposal
+            </button>
+        </div>
+    </section>
+
+    <!-- Smart Bin Section -->
+    <section id="smart-bin" class="py-5">
+        <div class="row g-4 py-5">
+            <h3 style="text-align: center;">Dustbin Locations</h3>
+            <!-- Metro Station Card -->
+            <div class="col-md-4">
+                <div class="location-card bg-Transparent text-black rounded-4 p-4">
+                    <div class="icon-circle metro mb-3 mx-auto">
+                        <img src="https://media.istockphoto.com/id/907199832/photo/dubai.jpg?b=1&s=612x612&w=0&k=20&c=ISSN57hoRMoYgV5WarKu6L-PcmJ2mdufnSim5ToWGBQ="
+                             class="img-fluid rounded-circle" 
+                             alt="Metro Station">
+                    </div>
+                    <h3><i class="fas fa-subway me-2"></i>Metro Stations</h3>
+                    <p>High-traffic solution for urban cleanliness</p>
+                </div>
+            </div>
+
+            <!-- Cybersecurity Center Card -->
+            <div class="col-md-4">
+                <div class="location-card bg-Transparent text-black rounded-4 p-4">
+                    <div class="icon-circle cyber mb-3 mx-auto">
+                        <img src="https://media.istockphoto.com/id/1317311226/photo/wide-angle-dusk-shot-of-crowds-of-people-at-cyberhub-in-gurgaon-with-food-outlets-and-office.jpg?s=612x612&w=0&k=20&c=j2LGJfQrwHb8k5Y-GTlORNGu6B9iPkwUKCSFL9zjNgU=" 
+                             class="img-fluid rounded-circle" 
+                             alt="Cybersecurity Center">
+                    </div>
+                    <h3><i class="fas fa-shield-alt me-2"></i>Data Centers</h3>
+                    <p>Secure waste disposal for sensitive environments</p>
+                </div>
+            </div>
+
+            <!-- Airport Card -->
+            <div class="col-md-4">
+                <div class="location-card bg-Transparent text-black rounded-4 p-4">
+                    <div class="icon-circle airport mb-3 mx-auto">
+                        <img src="https://images.pexels.com/photos/2574078/pexels-photo-2574078.jpeg?auto=compress&cs=tinysrgb&w=600" 
+                             class="img-fluid rounded-circle" 
+                             alt="Airport">
+                    </div>
+                    <h3><i class="fas fa-plane-departure me-2"></i>Airports</h3>
+                    <p>24/7 smart sanitation for global hubs</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="innovation-notice mt-5 p-4 bg-warning rounded-3">
+            <h4 class="mb-3"><i class="fas fa-brain me-2"></i>Context-Aware Intelligence</h4>
+            <p class="mb-0">Our bins adapt their operations based on location-specific requirements using advanced IoT sensors</p>
+        </div>
+    </div>
+            
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-robot me-2"></i>AI Waste Detection</h4>
+                    <p>Our smart bin uses computer vision and sensors to automatically identify and sort waste into appropriate categories:</p>
+                    <ul>
+                        <li><span class="badge bg-success me-2">Organic</span> Food waste, biodegradable materials</li>
+                        <li><span class="badge bg-danger me-2">Plastic</span> Bottles, containers, packaging</li>
+                        <li><span class="badge bg-primary me-2">Glass</span> Bottles, jars</li>
+                        <li><span class="badge bg-secondary me-2">Metal</span> Cans, foil, scrap</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4><i class="fas fa-chart-line me-2"></i>Real-time Monitoring</h4>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" style="width: 30%">Organic: 30%</div>
+                    </div>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-danger" style="width: 45%">Plastic: 45%</div>
+                    </div>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-primary" style="width: 25%">Glass: 25%</div>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-secondary" style="width: 35%">Metal: 35%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QR Scanner Overlay -->
+    <div class="scanner-overlay" id="scannerOverlay">
+        <video id="qr-video"></video>
+        <button class="btn btn-danger mt-3" id="stopScanBtn">
+            <i class="fas fa-times me-2"></i>Close Scanner
+        </button>
+        <div class="alert alert-success mt-3 d-none" id="scanSuccess">
+            <i class="fas fa-check-circle me-2"></i>
+            <span id="rewardMessage">You earned a 15% discount coupon on Zomato!</span>
+        </div>
+    </div>
+
+    <!-- Dispose Waste Modal -->
+    <div class="modal fade" id="disposeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dispose Waste</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Our AI system will automatically detect and sort your waste:</p>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <button class="btn btn-outline-success w-100 waste-btn" data-type="organic">
+                                <i class="fas fa-apple-alt me-2"></i>Organic
+                            </button>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <button class="btn btn-outline-danger w-100 waste-btn" data-type="plastic">
+                                <i class="fas fa-wine-bottle me-2"></i>Plastic
+                            </button>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <button class="btn btn-outline-primary w-100 waste-btn" data-type="glass">
+                                <i class="fas fa-glass-whiskey me-2"></i>Glass
+                            </button>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <button class="btn btn-outline-secondary w-100 waste-btn" data-type="metal">
+                                <i class="fas fa-cogs me-2"></i>Metal
+                            </button>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Just drop your waste in the bin - our AI will automatically sort it!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rewards Section -->
+    <section id="rewards" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Your Rewards</h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title"><i class="fas fa-trophy me-2"></i>Earned Coupons</h3>
+                            <div class="coupon-card p-3 mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">15% Off on Zomato</h5>
+                                        <p class="mb-0 text-muted">Valid until: 30/06/2025 | Code: ECOBIN15</p>
+                                    </div>
+                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWhGVd_z2w7oi2p9U7wraI4U2PCUix52G6LT5XxLmTsBRkmGTGFToxoAU&usqp=CAE&s"
+                                      style="width: 80px; height: 80px">
+                                </div>
+                            </div>
+                            <div class="coupon-card p-3 mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">₹100 Off on Blinkit</h5>
+                                        <p class="mb-0 text-muted">Valid until: 15/06/2025 | Code: ECOBIN100</p>
+                                    </div>
+                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ69pnkNcIaxbgpf-0qYe_wBDQRV5j36dJ84lQE1A253lcYBkxsGBekFac&usqp=CAE&s"
+                                    style="width: 80px; height: 80px;">
+                                </div>
+                            </div>
+                            <div class="coupon-card p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">Free Delivery on Zepto</h5>
+                                        <p class="mb-0 text-muted">Valid until: 20/06/2025 | Code: ECOBINFREE</p>
+                                    </div>
+                                    <img src="https://www.logoshape.com/wp-content/uploads/2024/09/zepto-logo-vector_logoshape.png"
+                                       style="width: 80px; height: 80px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title"><i class="fas fa-history me-2"></i>Disposal History</h3>
+                            <div class="p-3 mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">Plastic Bottle</h5>
+                                        <p class="mb-0 text-muted">Bin #A247, MG Road | Today 10:30 AM</p>
+                                    </div>
+                                    <span class="badge bg-danger">Plastic</span>
+                                </div>
+                            </div>
+                            <div class="p-3 mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">Food Waste</h5>
+                                        <p class="mb-0 text-muted">Bin #B512, Indiranagar | Yesterday 7:45 PM</p>
+                                    </div>
+                                    <span class="badge bg-success">Organic</span>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">Glass Jar</h5>
+                                        <p class="mb-0 text-muted">Bin #C789, Koramangala | Yesterday 4:15 PM</p>
+                                    </div>
+                                    <span class="badge bg-primary">Glass</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Municipal Dashboard Modal -->
+    <div class="modal fade" id="municipalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-truck me-2"></i>Municipal Collection Dashboard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="municipal-dashboard">
+                        <h4>Bin Collection Status</h4>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Bin ID</th>
+                                        <th>Location</th>
+                                        <th>Organic</th>
+                                        <th>Plastic</th>
+                                        <th>Glass</th>
+                                        <th>Metal</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#A247</td>
+                                        <td>MG Road</td>
+                                        <td><span class="badge bg-success">30%</span></td>
+                                        <td><span class="badge bg-warning">75%</span></td>
+                                        <td><span class="badge bg-success">25%</span></td>
+                                        <td><span class="badge bg-success">35%</span></td>
+                                        <td><button class="btn btn-sm btn-primary">Schedule Pickup</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#B512</td>
+                                        <td>Indiranagar</td>
+                                        <td><span class="badge bg-danger">85%</span></td>
+                                        <td><span class="badge bg-success">45%</span></td>
+                                        <td><span class="badge bg-success">30%</span></td>
+                                        <td><span class="badge bg-success">40%</span></td>
+                                        <td><button class="btn btn-sm btn-primary">Schedule Pickup</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#C789</td>
+                                        <td>Koramangala</td>
+                                        <td><span class="badge bg-success">50%</span></td>
+                                        <td><span class="badge bg-danger">90%</span></td>
+                                        <td><span class="badge bg-warning">65%</span></td>
+                                        <td><span class="badge bg-success">30%</span></td>
+                                        <td><button class="btn btn-sm btn-primary">Schedule Pickup</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4 class="mt-4">Collection Vehicle Status</h4>
+                        <div class="progress mb-3" style="height: 30px;">
+                            <div class="progress-bar bg-success" style="width: 25%">Organic: 25%</div>
+                            <div class="progress-bar bg-danger" style="width: 35%">Plastic: 35%</div>
+                            <div class="progress-bar bg-primary" style="width: 20%">Glass: 20%</div>
+                            <div class="progress-bar bg-secondary" style="width: 15%">Metal: 15%</div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Priority Alert:</strong> Plastic compartment at Bin #C789 is 90% full
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // QR Scanner functionality
+        const startScanBtn = document.getElementById('startScanBtn');
+        const scannerOverlay = document.getElementById('scannerOverlay');
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        const qrVideo = document.getElementById('qr-video');
+        const scanSuccess = document.getElementById('scanSuccess');
+        const rewardMessage = document.getElementById('rewardMessage');
+        
+        let qrScanner = null;
+        
+        startScanBtn.addEventListener('click', async () => {
+            scannerOverlay.style.display = 'flex';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        facingMode: 'environment' // Prefer rear-facing camera
+                    }
+                });
+                
+                qrScanner = new QrScanner(
+                    qrVideo,
+                    result => {
+                        console.log('QR Code detected:', result);
+                        qrScanner.stop();
+                        
+                        // Generate random reward
+                        const rewards = [
+                            "15% Off on Zomato (Code: ECOBIN15)",
+                            "₹100 Off on Blinkit (Code: ECOBIN100)",
+                            "Free Delivery on Zepto (Code: ECOBINFREE)",
+                            "20% Off on BigBasket (Code: ECOBIN20)"
+                        ];
+                        const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+                        
+                        rewardMessage.textContent = `You earned: ${randomReward}`;
+                        scanSuccess.classList.remove('d-none');
+                        
+                        setTimeout(() => {
+                            scannerOverlay.style.display = 'none';
+                            scanSuccess.classList.add('d-none');
+                        }, 5000);
+                    },
+                    {
+                        preferredCamera: 'environment',
+                        highlightScanRegion: true,
+                        highlightCodeOutline: true,
+                    }
+                );
+                
+                await qrScanner.start();
+                
+            } catch (error) {
+                console.error('Camera access error:', error);
+                alert('Error accessing camera. Please ensure camera permissions are granted.');
+                scannerOverlay.style.display = 'none';
+            }
+        });
+        
+        stopScanBtn.addEventListener('click', () => {
+            if (qrScanner) {
+                qrScanner.stop();
+            }
+            scannerOverlay.style.display = 'none';
+        });
+
+        // Waste disposal simulation 
+        /* ... (keep all existing waste disposal code the same) ... */
+        
+        function getWasteColor(type) {
+            switch(type) {
+                case 'organic': return '#8BC34A';
+                case 'plastic': return '#FF5722';
+                case 'glass': return '#2196F3';
+                case 'metal': return '#607D8B';
+                default: return '#333';
+            }
+        }
+        
+        function getWasteClass(type) {
+            switch(type) {
+                case 'organic': return 'success';
+                case 'plastic': return 'danger';
+                case 'glass': return 'primary';
+                case 'metal': return 'secondary';
+                default: return 'dark';
+            }
+        }
+    </script>
+</body>
+</html>
+
