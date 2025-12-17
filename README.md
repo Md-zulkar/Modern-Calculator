@@ -47,7 +47,7 @@ Pull requests are welcome!
 If you’d like to add new features or improvements, feel free to fork and submit a PR.
 
 
- ##############################################################     🌟 Show Some Love
+ #####################🌟 Show Some Love
 
-                                                              #  If you like this calculator, don’t forget to ⭐ the repo!
+  #  If you like this calculator, don’t forget to ⭐ the repo!
 
